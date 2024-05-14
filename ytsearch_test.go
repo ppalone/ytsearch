@@ -14,5 +14,8 @@ func TestSearch(t *testing.T) {
 	assert.NoError(t, err)
 
 	// response is not empty
-	assert.NotEmpty(t, res)
+	assert.NotEmpty(t, res.Results)
+
+	// continuation key is not empty
+	assert.NotEmpty(t, res.Continuation)
 }
