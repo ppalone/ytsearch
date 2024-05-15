@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSearch(t *testing.T) {
+func Test_Search(t *testing.T) {
 	c := Client{}
 	res, err := c.Search("nocopyrightsounds")
 
