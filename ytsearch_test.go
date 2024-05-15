@@ -30,7 +30,7 @@ func Test_SearchWithContext(t *testing.T) {
 		c := Client{}
 		res, err := c.SearchWithContext(ctx, "nocopyrightsounds")
 
-		assert.Error(t, err, context.Canceled)
+		assert.ErrorIs(t, err, context.DeadlineExceeded)
 		assert.Empty(t, res.Results)
 
 		// clean up
