@@ -16,10 +16,10 @@ func Test_Search(t *testing.T) {
 	assert.NoError(t, err)
 
 	// response is not empty
-	assert.NotEmpty(t, res.Results)
+	assert.NotEmpty(t, res.Results, "results are empty")
 
 	// continuation key is not empty
-	assert.NotEmpty(t, res.Continuation)
+	assert.NotEmpty(t, res.Continuation, "continuation token is empty")
 }
 
 func Test_SearchWithContext(t *testing.T) {
