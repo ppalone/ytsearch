@@ -170,10 +170,6 @@ func (c *Client) searchNext(ctx context.Context, key string) (SearchResponse, er
 		c.HTTPClient = http.DefaultClient
 	}
 
-	if c.HTTPClient == nil {
-		c.HTTPClient = http.DefaultClient
-	}
-
 	// prepare innertube request data
 	d := prepareInnertubeRequestForNext(key)
 
