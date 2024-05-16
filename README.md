@@ -2,6 +2,12 @@
 
 🔎 A simple Golang libary for getting video search results from Youtube (without any kind of API key)
 
+## Installation
+
+```
+go get -u github.com/ppalone/ytsearch
+```
+
 ## Usage
 
 ```go
