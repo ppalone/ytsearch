@@ -55,3 +55,28 @@ func Test_SearchWithContext(t *testing.T) {
 		})
 	})
 }
+
+func Test_Next(t *testing.T) {
+	t.Run("valid continuation token", func(t *testing.T) {
+		c := Client{}
+		res, err := c.Search("hacker")
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res.Results, "results")
+		assert.NotEmpty(t, res.Continuation, "continuation token")
+
+		// debug
+		t.Log("results length:", len(res.Results))
+		t.Log("continuation token:", res.Continuation)
+
+		res, err = c.Next(res.Continuation)
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res.Results, "next results")
+		assert.NotEmpty(t, res.Continuation, "next continuation token")
+
+		// debug
+		t.Log("next results length:", len(res.Results))
+		t.Log("next continuation token:", res.Continuation)
+	})
+}
