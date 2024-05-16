@@ -49,6 +49,15 @@ type innertubeRawResponse struct {
 			} `json:"primaryContents"`
 		} `json:"twoColumnSearchResultsRenderer"`
 	} `json:"contents"`
+
+	OnResponseReceivedCommands []struct {
+		AppendContinuationItemsAction struct {
+			ContinuationItems []struct {
+				ItemSectionRenderer      *itemSectionRenderer      `json:"itemSectionRenderer,omitempty"`
+				ContinuationItemRenderer *continuationItemRenderer `json:"continuationItemRenderer,omitempty"`
+			} `json:"continuationItems"`
+		} `json:"appendContinuationItemsAction"`
+	} `json:"onResponseReceivedCommands"`
 }
 
 // Video info

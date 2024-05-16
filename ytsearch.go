@@ -78,6 +78,7 @@ func prepareInnertubeRequestForNext(key string) innertubeRequest {
 			Client: innertubeWebClient,
 		},
 		Continuation: key,
+		Params:       ytDefaultVideoParams,
 	}
 }
 
@@ -86,6 +87,13 @@ func extractVideos(items *itemSectionRenderer) []VideoInfo {
 
 	for _, item := range items.Contents {
 		v := item.VideoRenderer
+
+		// Check if VideoID is present
+		// we don't want other stuff
+		if len(v.VideoID) == 0 {
+			continue
+		}
+
 		video := VideoInfo{
 			VideoID:    v.VideoID,
 			Thumbnails: v.Thumbnail.Thumbnails,
@@ -111,7 +119,19 @@ func extractContinuationToken(item *continuationItemRenderer) string {
 	return item.ContinuationEndpoint.ContinuationCommand.Token
 }
 
-func (c *Client) fetchResponse(ctx context.Context, reqData []byte) (SearchResponse, error) {
+func (c *Client) searchQuery(ctx context.Context, query string) (SearchResponse, error) {
+	if c.HTTPClient == nil {
+		c.HTTPClient = http.DefaultClient
+	}
+
+	// prepare innertube request data
+	d := prepareInnertubeRequestForSearch(query)
+
+	reqData, err := json.Marshal(d)
+	if err != nil {
+		return SearchResponse{}, err
+	}
+
 	req, err := makeRequest(ctx, http.MethodPost, ytSearchInternalBaseURL, bytes.NewReader(reqData))
 	if err != nil {
 		return SearchResponse{}, err
@@ -148,28 +168,61 @@ func (c *Client) fetchResponse(ctx context.Context, reqData []byte) (SearchRespo
 	return searchResponse, nil
 }
 
-func (c *Client) searchQuery(ctx context.Context, query string) (SearchResponse, error) {
+func (c *Client) searchNext(ctx context.Context, key string) (SearchResponse, error) {
+	if c.HTTPClient == nil {
+		c.HTTPClient = http.DefaultClient
+	}
+
 	if c.HTTPClient == nil {
 		c.HTTPClient = http.DefaultClient
 	}
 
 	// prepare innertube request data
-	d := prepareInnertubeRequestForSearch(query)
+	d := prepareInnertubeRequestForNext(key)
 
 	reqData, err := json.Marshal(d)
 	if err != nil {
 		return SearchResponse{}, err
 	}
 
-	return c.fetchResponse(ctx, reqData)
-}
-
-func (c *Client) searchNext(ctx context.Context, key string) (SearchResponse, error) {
-	if c.HTTPClient == nil {
-		c.HTTPClient = http.DefaultClient
+	req, err := makeRequest(ctx, http.MethodPost, ytSearchInternalBaseURL, bytes.NewReader(reqData))
+	if err != nil {
+		return SearchResponse{}, err
 	}
 
-	return SearchResponse{}, nil
+	// make http call
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return SearchResponse{}, err
+	}
+	defer resp.Body.Close()
+
+	rawResponse := new(innertubeRawResponse)
+
+	err = json.NewDecoder(resp.Body).Decode(rawResponse)
+	if err != nil {
+		return SearchResponse{}, err
+	}
+
+	// extract contents
+	t := rawResponse.OnResponseReceivedCommands
+
+	searchResponse := SearchResponse{}
+
+	if len(t) > 0 {
+		contents := t[0].AppendContinuationItemsAction.ContinuationItems
+
+		// iterate over contents
+		for _, content := range contents {
+			if content.ItemSectionRenderer != nil {
+				searchResponse.Results = extractVideos(content.ItemSectionRenderer)
+			} else if content.ContinuationItemRenderer != nil {
+				searchResponse.Continuation = extractContinuationToken(content.ContinuationItemRenderer)
+			}
+		}
+	}
+
+	return searchResponse, nil
 }
 
 func (c *Client) Search(query string) (SearchResponse, error) {
