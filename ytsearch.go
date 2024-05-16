@@ -3,10 +3,9 @@ package ytsearch
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
-
-	jsoniter "github.com/json-iterator/go"
 )
 
 const (
@@ -40,8 +39,6 @@ type innertubeRequest struct {
 	Params       string                  `json:"params,omitempty"`
 	Continuation string                  `json:"continuation,omitempty"`
 }
-
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // Innertube web client
 var innertubeWebClient innertubeClient = innertubeClient{
