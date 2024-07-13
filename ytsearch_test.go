@@ -2,6 +2,7 @@ package ytsearch
 
 import (
 	"context"
+	"net/http"
 	"testing"
 	"time"
 
@@ -9,17 +10,34 @@ import (
 )
 
 func Test_Search(t *testing.T) {
-	c := Client{}
-	res, err := c.Search("nocopyrightsounds")
+	t.Run("with default http client", func(t *testing.T) {
+		c := Client{}
+		res, err := c.Search("nocopyrightsounds")
 
-	// no errors
-	assert.NoError(t, err)
+		// no errors
+		assert.NoError(t, err)
 
-	// response is not empty
-	assert.NotEmpty(t, res.Results, "results are empty")
+		// response is not empty
+		assert.NotEmpty(t, res.Results, "results are empty")
 
-	// continuation key is not empty
-	assert.NotEmpty(t, res.Continuation, "continuation token is empty")
+		// continuation key is not empty
+		assert.NotEmpty(t, res.Continuation, "continuation token is empty")
+	})
+
+	t.Run("with custom http client", func(t *testing.T) {
+		httpclient := &http.Client{
+			Timeout: time.Nanosecond * 1,
+		}
+
+		// client
+		c := Client{
+			HTTPClient: httpclient,
+		}
+		res, err := c.Search("nocopyrightsounds")
+
+		assert.ErrorContains(t, err, context.DeadlineExceeded.Error())
+		assert.Empty(t, res)
+	})
 }
 
 func Test_SearchWithContext(t *testing.T) {
