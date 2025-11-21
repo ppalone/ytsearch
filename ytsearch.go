@@ -15,7 +15,7 @@ const (
 
 // YouTube Search Client
 type Client struct {
-	HTTPClient *http.Client
+	httpClient *http.Client
 }
 
 // Innertube Client
@@ -47,6 +47,31 @@ var innertubeWebClient innertubeClient = innertubeClient{
 	UserAgent:     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36,gzip(gfe)",
 	ClientName:    "WEB",
 	ClientVersion: "2.20240514.03.00",
+}
+
+// NewClient returns a new YtSearch client.
+func NewClient(c *http.Client) *Client {
+	if c == nil {
+		c = &http.Client{}
+	}
+
+	return &Client{c}
+}
+
+func (c *Client) Search(query string) (SearchResponse, error) {
+	return c.SearchWithContext(context.Background(), query)
+}
+
+func (c *Client) SearchWithContext(ctx context.Context, query string) (SearchResponse, error) {
+	return c.searchQuery(ctx, query)
+}
+
+func (c *Client) Next(key string) (SearchResponse, error) {
+	return c.NextWithContext(context.Background(), key)
+}
+
+func (c *Client) NextWithContext(ctx context.Context, key string) (SearchResponse, error) {
+	return c.searchNext(ctx, key)
 }
 
 func makeRequest(ctx context.Context, method string, url string, body io.Reader) (*http.Request, error) {
@@ -117,10 +142,6 @@ func extractContinuationToken(item *continuationItemRenderer) string {
 }
 
 func (c *Client) searchQuery(ctx context.Context, query string) (SearchResponse, error) {
-	if c.HTTPClient == nil {
-		c.HTTPClient = http.DefaultClient
-	}
-
 	// prepare innertube request data
 	d := prepareInnertubeRequestForSearch(query)
 
@@ -135,7 +156,7 @@ func (c *Client) searchQuery(ctx context.Context, query string) (SearchResponse,
 	}
 
 	// make http call
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return SearchResponse{}, err
 	}
@@ -166,10 +187,6 @@ func (c *Client) searchQuery(ctx context.Context, query string) (SearchResponse,
 }
 
 func (c *Client) searchNext(ctx context.Context, key string) (SearchResponse, error) {
-	if c.HTTPClient == nil {
-		c.HTTPClient = http.DefaultClient
-	}
-
 	// prepare innertube request data
 	d := prepareInnertubeRequestForNext(key)
 
@@ -184,7 +201,7 @@ func (c *Client) searchNext(ctx context.Context, key string) (SearchResponse, er
 	}
 
 	// make http call
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return SearchResponse{}, err
 	}
@@ -216,20 +233,4 @@ func (c *Client) searchNext(ctx context.Context, key string) (SearchResponse, er
 	}
 
 	return searchResponse, nil
-}
-
-func (c *Client) Search(query string) (SearchResponse, error) {
-	return c.SearchWithContext(context.Background(), query)
-}
-
-func (c *Client) SearchWithContext(ctx context.Context, query string) (SearchResponse, error) {
-	return c.searchQuery(ctx, query)
-}
-
-func (c *Client) Next(key string) (SearchResponse, error) {
-	return c.NextWithContext(context.Background(), key)
-}
-
-func (c *Client) NextWithContext(ctx context.Context, key string) (SearchResponse, error) {
-	return c.searchNext(ctx, key)
 }

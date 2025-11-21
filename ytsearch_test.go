@@ -11,7 +11,7 @@ import (
 
 func Test_Search(t *testing.T) {
 	t.Run("with default http client", func(t *testing.T) {
-		c := Client{}
+		c := NewClient(nil)
 		res, err := c.Search("nocopyrightsounds")
 
 		// no errors
@@ -25,14 +25,12 @@ func Test_Search(t *testing.T) {
 	})
 
 	t.Run("with custom http client", func(t *testing.T) {
-		httpclient := &http.Client{
+		httpClient := &http.Client{
 			Timeout: time.Nanosecond * 1,
 		}
 
 		// client
-		c := Client{
-			HTTPClient: httpclient,
-		}
+		c := NewClient(httpClient)
 		res, err := c.Search("nocopyrightsounds")
 
 		assert.ErrorContains(t, err, context.DeadlineExceeded.Error())
@@ -45,7 +43,7 @@ func Test_SearchWithContext(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*1)
 
 		// client
-		c := Client{}
+		c := NewClient(nil)
 		res, err := c.SearchWithContext(ctx, "nocopyrightsounds")
 
 		assert.ErrorIs(t, err, context.DeadlineExceeded)
@@ -61,7 +59,7 @@ func Test_SearchWithContext(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 
 		// client
-		c := Client{}
+		c := NewClient(nil)
 		res, err := c.SearchWithContext(ctx, "nocopyrightsounds")
 
 		assert.NoError(t, err)
@@ -76,7 +74,7 @@ func Test_SearchWithContext(t *testing.T) {
 
 func Test_Next(t *testing.T) {
 	t.Run("valid continuation token", func(t *testing.T) {
-		c := Client{}
+		c := NewClient(nil)
 		res, err := c.Search("hacker")
 
 		assert.NoError(t, err)
