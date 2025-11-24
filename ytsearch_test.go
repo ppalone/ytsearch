@@ -12,7 +12,7 @@ import (
 func Test_Search(t *testing.T) {
 	t.Run("with default http client", func(t *testing.T) {
 		c := NewClient(nil)
-		res, err := c.Search("nocopyrightsounds")
+		res, err := c.Search(context.Background(), "nocopyrightsounds")
 
 		// no errors
 		assert.NoError(t, err)
@@ -31,20 +31,18 @@ func Test_Search(t *testing.T) {
 
 		// client
 		c := NewClient(httpClient)
-		res, err := c.Search("nocopyrightsounds")
+		res, err := c.Search(context.Background(), "nocopyrightsounds")
 
 		assert.ErrorContains(t, err, context.DeadlineExceeded.Error())
 		assert.Empty(t, res)
 	})
-}
 
-func Test_SearchWithContext(t *testing.T) {
 	t.Run("context with insufficent timeout", func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*1)
 
 		// client
 		c := NewClient(nil)
-		res, err := c.SearchWithContext(ctx, "nocopyrightsounds")
+		res, err := c.Search(ctx, "nocopyrightsounds")
 
 		assert.ErrorIs(t, err, context.DeadlineExceeded)
 		assert.Empty(t, res.Results)
@@ -60,7 +58,7 @@ func Test_SearchWithContext(t *testing.T) {
 
 		// client
 		c := NewClient(nil)
-		res, err := c.SearchWithContext(ctx, "nocopyrightsounds")
+		res, err := c.Search(ctx, "nocopyrightsounds")
 
 		assert.NoError(t, err)
 		assert.NotEmpty(t, res.Results)
@@ -72,16 +70,16 @@ func Test_SearchWithContext(t *testing.T) {
 	})
 }
 
-func Test_Next(t *testing.T) {
+func Test_SearchNext(t *testing.T) {
 	t.Run("valid continuation token", func(t *testing.T) {
 		c := NewClient(nil)
-		res, err := c.Search("hacker")
+		res, err := c.Search(context.Background(), "proximity music")
 
 		assert.NoError(t, err)
 		assert.NotEmpty(t, res.Results, "results")
 		assert.NotEmpty(t, res.Continuation, "continuation token")
 
-		res, err = c.Next(res.Continuation)
+		res, err = c.SearchNext(context.Background(), res.Continuation)
 
 		assert.NoError(t, err)
 		assert.NotEmpty(t, res.Results, "next results")

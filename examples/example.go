@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/ppalone/ytsearch"
@@ -8,10 +9,10 @@ import (
 
 func main() {
 	// client
-	c := ytsearch.Client{}
+	c := ytsearch.NewClient(nil)
 
 	// search for "nocopyrightsounds"
-	res, err := c.Search("nocopyrightsounds")
+	res, err := c.Search(context.Background(), "nocopyrightsounds")
 	if err != nil {
 		panic(err)
 	}
@@ -28,7 +29,7 @@ func main() {
 	// res.Continuation contains continuation token
 	// can be used to fetch next results
 	// since youtube limits the number of search results
-	res, err = c.Next(res.Continuation)
+	res, err = c.SearchNext(context.Background(), res.Continuation)
 	if err != nil {
 		panic(err)
 	}

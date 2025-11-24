@@ -18,37 +18,6 @@ type Client struct {
 	httpClient *http.Client
 }
 
-// Innertube Client
-type innertubeClient struct {
-	Hl            string `json:"hl"`
-	Gl            string `json:"gl"`
-	UserAgent     string `json:"userAgent"`
-	ClientName    string `json:"clientName"`
-	ClientVersion string `json:"clientVersion"`
-}
-
-// Innertube request context
-type innertubeRequestContext struct {
-	Client innertubeClient `json:"client"`
-}
-
-// Innertube Request
-type innertubeRequest struct {
-	Context      innertubeRequestContext `json:"context"`
-	Query        string                  `json:"query,omitempty"`
-	Params       string                  `json:"params,omitempty"`
-	Continuation string                  `json:"continuation,omitempty"`
-}
-
-// Innertube web client
-var innertubeWebClient innertubeClient = innertubeClient{
-	Hl:            "en",
-	Gl:            "US",
-	UserAgent:     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36,gzip(gfe)",
-	ClientName:    "WEB",
-	ClientVersion: "2.20240514.03.00",
-}
-
 // NewClient returns a new YtSearch client.
 func NewClient(c *http.Client) *Client {
 	if c == nil {
@@ -58,19 +27,13 @@ func NewClient(c *http.Client) *Client {
 	return &Client{c}
 }
 
-func (c *Client) Search(query string) (SearchResponse, error) {
-	return c.SearchWithContext(context.Background(), query)
-}
-
-func (c *Client) SearchWithContext(ctx context.Context, query string) (SearchResponse, error) {
+// Search
+func (c *Client) Search(ctx context.Context, query string) (SearchResponse, error) {
 	return c.searchQuery(ctx, query)
 }
 
-func (c *Client) Next(key string) (SearchResponse, error) {
-	return c.NextWithContext(context.Background(), key)
-}
-
-func (c *Client) NextWithContext(ctx context.Context, key string) (SearchResponse, error) {
+// SearchNext
+func (c *Client) SearchNext(ctx context.Context, key string) (SearchResponse, error) {
 	return c.searchNext(ctx, key)
 }
 
@@ -82,26 +45,6 @@ func makeRequest(ctx context.Context, method string, url string, body io.Reader)
 
 	req.Header.Set("Content-Type", "application/json")
 	return req, nil
-}
-
-func prepareInnertubeRequestForSearch(query string) innertubeRequest {
-	return innertubeRequest{
-		Context: innertubeRequestContext{
-			Client: innertubeWebClient,
-		},
-		Query:  query,
-		Params: ytDefaultVideoParams,
-	}
-}
-
-func prepareInnertubeRequestForNext(key string) innertubeRequest {
-	return innertubeRequest{
-		Context: innertubeRequestContext{
-			Client: innertubeWebClient,
-		},
-		Continuation: key,
-		Params:       ytDefaultVideoParams,
-	}
 }
 
 func extractVideos(items *itemSectionRenderer) []VideoInfo {
